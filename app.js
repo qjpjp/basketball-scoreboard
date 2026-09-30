@@ -7,9 +7,14 @@ const defaultState = {
   periodSeconds: 600,
   clockSeconds: 600,
   clockRunning: false,
+  clockStartedAt: null,
+  clockStartSeconds: null,
   shotClockMax: 24,
   shotClockSeconds: 24,
   shotClockRunning: false,
+  shotClockStartedAt: null,
+  shotClockStartSeconds: null,
+  matchStatus: "ready",
   possession: "home",
   soundOn: true,
   venue: "洛杉矶体育馆",
@@ -93,7 +98,17 @@ function render({ broadcast = true } = {}) {
   $("#lastEventLabel").textContent = state.events[0]?.label || "暂无记录";
   $("#displayPeriodName").textContent = state.period === 5 ? "加时" : `第 ${state.period} 节`;
   $("#shotClockState").textContent = state.shotClockRunning ? "计时中" : "准备";
-  $("#clockStatus").textContent = state.clockRunning ? "比赛计时中" : state.clockSeconds === 0 ? "本节结束" : "准备开赛";
+  $("#clockStatus").textContent =
+    state.matchStatus === "finished" ? "比赛已结束" : state.clockRunning ? "比赛计时中" : state.clockSeconds === 0 ? "本节结束" : "准备开赛";
+  $("#matchStatusLabel").textContent =
+    state.matchStatus === "finished" ? "比赛已结束" : state.matchStatus === "live" ? "比赛进行中" : "准备开赛";
+  $("#finishButton").disabled = state.matchStatus === "finished";
+  const isFinished = state.matchStatus === "finished";
+  $$("[data-score-action], [data-foul-action], [data-period], [data-clock-adjust], [data-possession], [data-quick-action], #clockToggle, #clockReset, #shotClockToggle, #shotClockReset, #timeoutButton, #swapSidesButton").forEach(
+    (button) => {
+      button.disabled = isFinished;
+    },
+  );
   $("#venueLabel").textContent = state.venue;
 
   $$(".team-name-button").forEach((button) => {
@@ -150,41 +165,79 @@ function addEvent(label, detail, icon = "circle-dot", score = "") {
   state.events.unshift({ label, detail, icon, score, time: formatTime(state.clockSeconds) });
 }
 
-function setClockRunning(shouldRun, broadcast = true) {
-  state.clockRunning = shouldRun && state.clockSeconds > 0;
-  if (state.clockRunning && !intervalId) {
-    intervalId = window.setInterval(() => {
-      state.clockSeconds = Math.max(0, state.clockSeconds - 1);
-      if (state.clockSeconds === 0) {
-        setClockRunning(false);
-        showToast("本节计时结束");
-        addEvent("本节结束", `第 ${state.period} 节计时归零`, "bell");
-      }
-      render();
-    }, 1000);
+function updateClockFromTimestamp() {
+  if (!state.clockRunning || !state.clockStartedAt) return;
+  const elapsedSeconds = Math.floor((Date.now() - state.clockStartedAt) / 1000);
+  const nextSeconds = Math.max(0, state.clockStartSeconds - elapsedSeconds);
+  if (nextSeconds === state.clockSeconds) return;
+  state.clockSeconds = nextSeconds;
+  if (state.clockSeconds === 0) {
+    state.clockRunning = false;
+    state.clockStartedAt = null;
+    state.clockStartSeconds = null;
+    state.matchStatus = "ready";
+    if (intervalId) clearInterval(intervalId);
+    intervalId = null;
+    showToast("本节计时结束");
+    addEvent("本节结束", `第 ${state.period} 节计时归零`, "bell");
   }
-  if (!state.clockRunning && intervalId) {
-    clearInterval(intervalId);
+  render();
+}
+
+function updateShotClockFromTimestamp() {
+  if (!state.shotClockRunning || !state.shotClockStartedAt) return;
+  const elapsedSeconds = Math.floor((Date.now() - state.shotClockStartedAt) / 1000);
+  const nextSeconds = Math.max(0, state.shotClockStartSeconds - elapsedSeconds);
+  if (nextSeconds === state.shotClockSeconds) return;
+  state.shotClockSeconds = nextSeconds;
+  if (state.shotClockSeconds === 0) {
+    state.shotClockRunning = false;
+    state.shotClockStartedAt = null;
+    state.shotClockStartSeconds = null;
+    if (shotIntervalId) clearInterval(shotIntervalId);
+    shotIntervalId = null;
+    showToast("进攻时间结束");
+    addEvent("进攻时间结束", `${state.shotClockMax} 秒计时归零`, "timer");
+  }
+  render();
+}
+
+function setClockRunning(shouldRun, broadcast = true) {
+  if (shouldRun) {
+    if (state.matchStatus === "finished" || state.clockSeconds <= 0) return;
+    if (!state.clockRunning) {
+      state.clockRunning = true;
+      state.matchStatus = "live";
+      state.clockStartedAt = Date.now();
+      state.clockStartSeconds = state.clockSeconds;
+    }
+    if (!intervalId) intervalId = window.setInterval(updateClockFromTimestamp, 200);
+  } else {
+    updateClockFromTimestamp();
+    state.clockRunning = false;
+    state.clockStartedAt = null;
+    state.clockStartSeconds = null;
+    if (intervalId) clearInterval(intervalId);
     intervalId = null;
   }
   render({ broadcast });
 }
 
 function setShotClockRunning(shouldRun, broadcast = true) {
-  state.shotClockRunning = shouldRun && state.shotClockSeconds > 0;
-  if (state.shotClockRunning && !shotIntervalId) {
-    shotIntervalId = window.setInterval(() => {
-      state.shotClockSeconds = Math.max(0, state.shotClockSeconds - 1);
-      if (state.shotClockSeconds === 0) {
-        setShotClockRunning(false);
-        showToast("进攻时间结束");
-        addEvent("进攻时间结束", "24 秒计时归零", "timer");
-      }
-      render();
-    }, 1000);
-  }
-  if (!state.shotClockRunning && shotIntervalId) {
-    clearInterval(shotIntervalId);
+  if (shouldRun) {
+    if (state.matchStatus === "finished" || state.shotClockSeconds <= 0) return;
+    if (!state.shotClockRunning) {
+      state.shotClockRunning = true;
+      state.shotClockStartedAt = Date.now();
+      state.shotClockStartSeconds = state.shotClockSeconds;
+    }
+    if (!shotIntervalId) shotIntervalId = window.setInterval(updateShotClockFromTimestamp, 200);
+  } else {
+    updateShotClockFromTimestamp();
+    state.shotClockRunning = false;
+    state.shotClockStartedAt = null;
+    state.shotClockStartSeconds = null;
+    if (shotIntervalId) clearInterval(shotIntervalId);
     shotIntervalId = null;
   }
   render({ broadcast });
@@ -221,9 +274,14 @@ function selectPeriod(period) {
   snapshot();
   state.period = period === "OT" ? 5 : Number(period);
   state.clockSeconds = state.period === 5 ? 300 : state.periodSeconds;
+  state.clockStartedAt = null;
+  state.clockStartSeconds = null;
   state.shotClockSeconds = state.shotClockMax;
+  state.shotClockStartedAt = null;
+  state.shotClockStartSeconds = null;
   state.clockRunning = false;
   state.shotClockRunning = false;
+  state.matchStatus = "ready";
   addEvent(state.period === 5 ? "进入加时" : `进入第 ${state.period} 节`, "比赛节次已切换", "arrow-right");
   stopIntervals();
   render();
@@ -240,11 +298,22 @@ function applyRemoteState(nextState) {
   if (!nextState?.teams?.home || !nextState?.teams?.away) return;
   state = cloneState(nextState);
 
-  if (state.clockRunning) setClockRunning(true, false);
-  else setClockRunning(false, false);
-
-  if (state.shotClockRunning) setShotClockRunning(true, false);
-  else setShotClockRunning(false, false);
+  if (state.clockRunning) {
+    state.clockStartedAt ??= Date.now();
+    state.clockStartSeconds ??= state.clockSeconds;
+    if (!intervalId) intervalId = window.setInterval(updateClockFromTimestamp, 200);
+  } else if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+  if (state.shotClockRunning) {
+    state.shotClockStartedAt ??= Date.now();
+    state.shotClockStartSeconds ??= state.shotClockSeconds;
+    if (!shotIntervalId) shotIntervalId = window.setInterval(updateShotClockFromTimestamp, 200);
+  } else if (shotIntervalId) {
+    clearInterval(shotIntervalId);
+    shotIntervalId = null;
+  }
 
   render({ broadcast: false });
 }
@@ -294,8 +363,13 @@ function saveSettings() {
   state.period = 1;
   state.clockSeconds = state.periodSeconds;
   state.clockRunning = false;
+  state.clockStartedAt = null;
+  state.clockStartSeconds = null;
   state.shotClockSeconds = state.shotClockMax;
   state.shotClockRunning = false;
+  state.shotClockStartedAt = null;
+  state.shotClockStartSeconds = null;
+  state.matchStatus = "ready";
   state.possession = "home";
   state.events = [
     {
@@ -357,8 +431,12 @@ function bindEvents() {
   });
   $("#clockReset").addEventListener("click", () => {
     snapshot();
+    updateClockFromTimestamp();
     state.clockRunning = false;
+    state.clockStartedAt = null;
+    state.clockStartSeconds = null;
     state.clockSeconds = state.period === 5 ? 300 : state.periodSeconds;
+    state.matchStatus = "ready";
     stopIntervals();
     addEvent("重置比赛计时", `第 ${state.period} 节 · ${formatTime(state.clockSeconds)}`, "rotate-ccw");
     render();
@@ -366,8 +444,11 @@ function bindEvents() {
   $("#shotClockToggle").addEventListener("click", () => setShotClockRunning(!state.shotClockRunning));
   $("#shotClockReset").addEventListener("click", () => {
     snapshot();
+    updateShotClockFromTimestamp();
     state.shotClockSeconds = state.shotClockMax;
     state.shotClockRunning = false;
+    state.shotClockStartedAt = null;
+    state.shotClockStartSeconds = null;
     if (shotIntervalId) clearInterval(shotIntervalId);
     shotIntervalId = null;
     addEvent("重置进攻时间", `${state.shotClockMax} 秒`, "rotate-ccw");
@@ -422,8 +503,11 @@ function bindEvents() {
     showToast("已交换主客队");
   });
   $("#finishButton").addEventListener("click", () => {
+    if (state.matchStatus === "finished") return;
+    snapshot();
     setClockRunning(false);
     setShotClockRunning(false);
+    state.matchStatus = "finished";
     addEvent("比赛结束", `${state.teams.home.name} ${state.teams.home.score} — ${state.teams.away.score} ${state.teams.away.name}`, "flag");
     render();
     showToast("比赛已结束，记录已保留");
