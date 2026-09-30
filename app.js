@@ -27,6 +27,7 @@ let toastTimer = null;
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const appShell = document.querySelector(".app-shell");
+const syncChannel = "BroadcastChannel" in window ? new BroadcastChannel("court-scoreboard-sync") : null;
 
 function getViewFromHash() {
   return window.location.hash === "#control" ? "control" : "display";
@@ -61,9 +62,12 @@ function loadState() {
   return cloneState(defaultState);
 }
 
-function persistState() {
+function persistState(broadcast = true) {
   try {
     localStorage.setItem("court-scoreboard-state", JSON.stringify(state));
+    if (broadcast) {
+      syncChannel?.postMessage({ type: "state", state: cloneState(state) });
+    }
   } catch (error) {
     console.warn("Unable to persist local state", error);
   }
@@ -74,7 +78,7 @@ function snapshot() {
   if (history.length > 40) history.shift();
 }
 
-function render() {
+function render({ broadcast = true } = {}) {
   $("#homeScore").textContent = state.teams.home.score;
   $("#awayScore").textContent = state.teams.away.score;
   $("#homeFouls").textContent = state.teams.home.fouls;
@@ -107,7 +111,7 @@ function render() {
   $("#soundToggle").innerHTML = state.soundOn ? '<i data-lucide="volume-2"></i>' : '<i data-lucide="volume-x"></i>';
   renderEvents();
   lucide.createIcons();
-  persistState();
+  persistState(broadcast);
 }
 
 function renderEvents() {
@@ -146,7 +150,7 @@ function addEvent(label, detail, icon = "circle-dot", score = "") {
   state.events.unshift({ label, detail, icon, score, time: formatTime(state.clockSeconds) });
 }
 
-function setClockRunning(shouldRun) {
+function setClockRunning(shouldRun, broadcast = true) {
   state.clockRunning = shouldRun && state.clockSeconds > 0;
   if (state.clockRunning && !intervalId) {
     intervalId = window.setInterval(() => {
@@ -163,10 +167,10 @@ function setClockRunning(shouldRun) {
     clearInterval(intervalId);
     intervalId = null;
   }
-  render();
+  render({ broadcast });
 }
 
-function setShotClockRunning(shouldRun) {
+function setShotClockRunning(shouldRun, broadcast = true) {
   state.shotClockRunning = shouldRun && state.shotClockSeconds > 0;
   if (state.shotClockRunning && !shotIntervalId) {
     shotIntervalId = window.setInterval(() => {
@@ -183,7 +187,7 @@ function setShotClockRunning(shouldRun) {
     clearInterval(shotIntervalId);
     shotIntervalId = null;
   }
-  render();
+  render({ broadcast });
 }
 
 function changeScore(team, amount) {
@@ -232,6 +236,27 @@ function stopIntervals() {
   shotIntervalId = null;
 }
 
+function applyRemoteState(nextState) {
+  if (!nextState?.teams?.home || !nextState?.teams?.away) return;
+  state = cloneState(nextState);
+
+  if (state.clockRunning) setClockRunning(true, false);
+  else setClockRunning(false, false);
+
+  if (state.shotClockRunning) setShotClockRunning(true, false);
+  else setShotClockRunning(false, false);
+
+  render({ broadcast: false });
+}
+
+function receiveState(nextState) {
+  try {
+    applyRemoteState(typeof nextState === "string" ? JSON.parse(nextState) : nextState);
+  } catch (error) {
+    console.warn("Unable to sync scoreboard state", error);
+  }
+}
+
 function showToast(message) {
   const toast = $("#toast");
   toast.textContent = message;
@@ -276,6 +301,12 @@ function bindEvents() {
     button.addEventListener("click", () => setView(button.dataset.viewTarget));
   });
   window.addEventListener("hashchange", () => setView(getViewFromHash(), false));
+  window.addEventListener("storage", (event) => {
+    if (event.key === "court-scoreboard-state" && event.newValue) receiveState(event.newValue);
+  });
+  syncChannel?.addEventListener("message", (event) => {
+    if (event.data?.type === "state") receiveState(event.data.state);
+  });
   $$(".score-button").forEach((button) => {
     button.addEventListener("click", () => {
       const [team, amount] = button.dataset.scoreAction.split(":");
