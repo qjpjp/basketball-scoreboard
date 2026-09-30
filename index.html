@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07111f" />
+    <title>球场记分台</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-lockup">
+          <div class="brand-mark" aria-hidden="true"><i data-lucide="tally-5"></i></div>
+          <div>
+            <p class="brand-name">球场记分台</p>
+            <p class="brand-subtitle">MATCH CONTROL / 01</p>
+          </div>
+        </div>
+
+        <div class="match-meta">
+          <span class="live-pill"><span class="live-dot"></span>比赛进行中</span>
+          <span class="meta-divider"></span>
+          <span id="matchDate">2026 / 09 / 30</span>
+          <span class="meta-divider"></span>
+          <span id="venueLabel">洛杉矶体育馆</span>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="icon-button" id="soundToggle" type="button" title="声音提醒" aria-label="声音提醒">
+            <i data-lucide="volume-2"></i>
+          </button>
+          <button class="icon-button" id="fullscreenButton" type="button" title="全屏" aria-label="全屏">
+            <i data-lucide="maximize-2"></i>
+          </button>
+          <button class="outline-button" id="settingsButton" type="button">
+            <i data-lucide="settings-2"></i>
+            <span>比赛设置</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <section class="scoreboard-section">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">LIVE SCOREBOARD</p>
+              <h1>实时记分</h1>
+            </div>
+            <div class="period-selector" role="group" aria-label="选择节次">
+              <button class="period-button is-active" type="button" data-period="1">第 1 节</button>
+              <button class="period-button" type="button" data-period="2">第 2 节</button>
+              <button class="period-button" type="button" data-period="3">第 3 节</button>
+              <button class="period-button" type="button" data-period="4">第 4 节</button>
+              <button class="period-button" type="button" data-period="OT">加时</button>
+            </div>
+          </div>
+
+          <div class="scoreboard-card">
+            <div class="scoreboard-topline">
+              <div class="match-label"><span class="status-ring"></span>常规赛 · 友谊赛</div>
+              <button class="text-button" id="swapSidesButton" type="button">
+                <i data-lucide="repeat-2"></i>
+                交换场地
+              </button>
+            </div>
+
+            <div class="score-grid">
+              <article class="team-panel home-team">
+                <div class="team-identity">
+                  <div class="team-color home-color"></div>
+                  <div>
+                    <p class="team-role">主队 / HOME</p>
+                    <button class="team-name-button" data-edit-team="home" type="button">同曦</button>
+                  </div>
+                </div>
+                <div class="score-number" id="homeScore">3</div>
+                <div class="team-controls">
+                  <button class="score-button score-minus" data-score-action="home:-1" type="button" title="主队减一分">−1</button>
+                  <button class="score-button" data-score-action="home:1" type="button">+1</button>
+                  <button class="score-button" data-score-action="home:2" type="button">+2</button>
+                  <button class="score-button score-three" data-score-action="home:3" type="button">+3</button>
+                </div>
+                <div class="team-stats">
+                  <div><span>犯规</span><strong id="homeFouls">0</strong></div>
+                  <div><span>暂停</span><strong id="homeTimeouts">3</strong></div>
+                  <button class="foul-action" data-foul-action="home" type="button">记录犯规 <i data-lucide="plus"></i></button>
+                </div>
+              </article>
+
+              <div class="clock-panel">
+                <div class="clock-kicker">PERIOD <span id="periodLabel">01</span></div>
+                <div class="game-clock" id="gameClock">10:00</div>
+                <div class="clock-status" id="clockStatus">准备开赛</div>
+                <div class="clock-controls">
+                  <button class="primary-control" id="clockToggle" type="button">
+                    <i data-lucide="play"></i>
+                    <span>开始计时</span>
+                  </button>
+                  <button class="secondary-control" id="clockReset" type="button" title="重置本节计时">
+                    <i data-lucide="rotate-ccw"></i>
+                  </button>
+                </div>
+                <div class="clock-adjustments">
+                  <button type="button" data-clock-adjust="-60">− 1:00</button>
+                  <button type="button" data-clock-adjust="60">+ 1:00</button>
+                </div>
+                <div class="possession-line">
+                  <span>球权</span>
+                  <button class="possession-button home-possession is-active" data-possession="home" type="button">同曦</button>
+                  <span class="possession-arrow">→</span>
+                  <button class="possession-button away-possession" data-possession="away" type="button">新训</button>
+                </div>
+              </div>
+
+              <article class="team-panel away-team">
+                <div class="team-identity">
+                  <div class="team-color away-color"></div>
+                  <div>
+                    <p class="team-role">客队 / AWAY</p>
+                    <button class="team-name-button" data-edit-team="away" type="button">新训</button>
+                  </div>
+                </div>
+                <div class="score-number" id="awayScore">5</div>
+                <div class="team-controls">
+                  <button class="score-button score-minus" data-score-action="away:-1" type="button" title="客队减一分">−1</button>
+                  <button class="score-button" data-score-action="away:1" type="button">+1</button>
+                  <button class="score-button" data-score-action="away:2" type="button">+2</button>
+                  <button class="score-button score-three" data-score-action="away:3" type="button">+3</button>
+                </div>
+                <div class="team-stats">
+                  <div><span>犯规</span><strong id="awayFouls">0</strong></div>
+                  <div><span>暂停</span><strong id="awayTimeouts">3</strong></div>
+                  <button class="foul-action" data-foul-action="away" type="button">记录犯规 <i data-lucide="plus"></i></button>
+                </div>
+              </article>
+            </div>
+
+            <div class="scoreboard-footer">
+              <div class="mini-stat">
+                <span>本节总分</span>
+                <strong id="periodTotal">8</strong>
+              </div>
+              <div class="mini-stat">
+                <span>比赛总分</span>
+                <strong id="matchTotal">8</strong>
+              </div>
+              <div class="mini-stat">
+                <span>最后记录</span>
+                <strong id="lastEventLabel">开场比分</strong>
+              </div>
+              <div class="scoreboard-footer-actions">
+                <button class="ghost-button" id="timeoutButton" type="button">
+                  <i data-lucide="timer"></i>
+                  记录暂停
+                </button>
+                <button class="danger-button" id="finishButton" type="button">
+                  <i data-lucide="flag"></i>
+                  结束比赛
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="lower-grid">
+          <div class="control-column">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">SHOT CLOCK</p>
+                <h2>进攻计时</h2>
+              </div>
+              <span class="panel-badge" id="shotClockState">准备</span>
+            </div>
+            <div class="shot-clock-card">
+              <div class="shot-clock-value" id="shotClock">24</div>
+              <div class="shot-clock-copy">
+                <strong>24 秒进攻时间</strong>
+                <span>进攻转换或投篮命中后重置</span>
+              </div>
+              <div class="shot-clock-actions">
+                <button class="shot-clock-main" id="shotClockToggle" type="button"><i data-lucide="play"></i></button>
+                <button class="shot-clock-reset" id="shotClockReset" type="button"><i data-lucide="rotate-ccw"></i></button>
+              </div>
+            </div>
+
+            <div class="panel-heading panel-heading-spaced">
+              <div>
+                <p class="eyebrow">QUICK ACTIONS</p>
+                <h2>快捷记录</h2>
+              </div>
+              <span class="keyboard-hint">SPACE 开始 / 暂停</span>
+            </div>
+            <div class="quick-actions">
+              <button class="quick-action" data-quick-action="jumpball" type="button">
+                <span class="quick-action-icon"><i data-lucide="circle-dot"></i></span>
+                <span><strong>跳球</strong><small>记录一次跳球</small></span>
+              </button>
+              <button class="quick-action" data-quick-action="steal" type="button">
+                <span class="quick-action-icon"><i data-lucide="hand"></i></span>
+                <span><strong>抢断</strong><small>添加比赛事件</small></span>
+              </button>
+              <button class="quick-action" data-quick-action="rebound" type="button">
+                <span class="quick-action-icon"><i data-lucide="move-up"></i></span>
+                <span><strong>篮板</strong><small>添加比赛事件</small></span>
+              </button>
+              <button class="quick-action" data-quick-action="technical" type="button">
+                <span class="quick-action-icon"><i data-lucide="triangle-alert"></i></span>
+                <span><strong>技术犯规</strong><small>添加比赛事件</small></span>
+              </button>
+            </div>
+          </div>
+
+          <aside class="events-column">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">MATCH LOG</p>
+                <h2>比赛记录</h2>
+              </div>
+              <button class="text-button" id="undoButton" type="button">
+                <i data-lucide="undo-2"></i>
+                撤销
+              </button>
+            </div>
+            <div class="event-list" id="eventList"></div>
+            <div class="event-footer">
+              <span><i data-lucide="info"></i> 所有操作都会按时间顺序保留</span>
+              <button class="clear-events" id="clearEventsButton" type="button">清空记录</button>
+            </div>
+          </aside>
+        </section>
+      </main>
+
+      <footer class="app-footer">
+        <span>球场记分台 · 篮球赛事控制中心</span>
+        <span class="footer-status"><span class="status-dot"></span> 本地记录已保存</span>
+      </footer>
+    </div>
+
+    <div class="modal-backdrop" id="settingsModal" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <div class="modal-heading">
+          <div>
+            <p class="eyebrow">MATCH SETUP</p>
+            <h2 id="settingsTitle">比赛设置</h2>
+          </div>
+          <button class="icon-button" id="closeSettingsButton" type="button" title="关闭">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <label class="form-field">
+          <span>主队名称</span>
+          <input id="homeTeamInput" type="text" value="同曦" maxlength="12" />
+        </label>
+        <label class="form-field">
+          <span>客队名称</span>
+          <input id="awayTeamInput" type="text" value="新训" maxlength="12" />
+        </label>
+        <label class="form-field">
+          <span>场馆</span>
+          <input id="venueInput" type="text" value="洛杉矶体育馆" maxlength="24" />
+        </label>
+        <div class="settings-row">
+          <label class="form-field">
+            <span>每节时长</span>
+            <select id="periodLengthInput">
+              <option value="600">10 分钟</option>
+              <option value="720">12 分钟</option>
+              <option value="300">5 分钟</option>
+            </select>
+          </label>
+          <label class="form-field">
+            <span>进攻时间</span>
+            <select id="shotClockLengthInput">
+              <option value="24">24 秒</option>
+              <option value="14">14 秒</option>
+            </select>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="ghost-button" id="cancelSettingsButton" type="button">取消</button>
+          <button class="primary-button" id="saveSettingsButton" type="button">
+            <i data-lucide="check"></i>
+            保存设置
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
