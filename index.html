@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="app-shell">
+    <div class="app-shell view-display">
       <header class="topbar">
         <div class="brand-lockup">
           <div class="brand-mark" aria-hidden="true"><i data-lucide="tally-5"></i></div>
@@ -23,6 +23,17 @@
             <p class="brand-subtitle">MATCH CONTROL / 01</p>
           </div>
         </div>
+
+        <nav class="view-switcher" aria-label="页面切换">
+          <button class="view-tab is-active" data-view-target="display" type="button">
+            <i data-lucide="monitor"></i>
+            <span>记分牌</span>
+          </button>
+          <button class="view-tab" data-view-target="control" type="button">
+            <i data-lucide="sliders-horizontal"></i>
+            <span>操作台</span>
+          </button>
+        </nav>
 
         <div class="match-meta">
           <span class="live-pill"><span class="live-dot"></span>比赛进行中</span>
@@ -39,7 +50,7 @@
           <button class="icon-button" id="fullscreenButton" type="button" title="全屏" aria-label="全屏">
             <i data-lucide="maximize-2"></i>
           </button>
-          <button class="outline-button" id="settingsButton" type="button">
+          <button class="outline-button control-only" id="settingsButton" type="button">
             <i data-lucide="settings-2"></i>
             <span>比赛设置</span>
           </button>
@@ -50,22 +61,26 @@
         <section class="scoreboard-section">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">LIVE SCOREBOARD</p>
-              <h1>实时记分</h1>
+              <p class="eyebrow" id="pageEyebrow">LIVE SCOREBOARD</p>
+              <h1 id="pageTitle">实时记分</h1>
             </div>
-            <div class="period-selector" role="group" aria-label="选择节次">
+            <div class="period-selector control-only" role="group" aria-label="选择节次">
               <button class="period-button is-active" type="button" data-period="1">第 1 节</button>
               <button class="period-button" type="button" data-period="2">第 2 节</button>
               <button class="period-button" type="button" data-period="3">第 3 节</button>
               <button class="period-button" type="button" data-period="4">第 4 节</button>
               <button class="period-button" type="button" data-period="OT">加时</button>
             </div>
+            <div class="display-period-chip display-only">
+              <i data-lucide="clock-3"></i>
+              <span id="displayPeriodName">第 1 节</span>
+            </div>
           </div>
 
           <div class="scoreboard-card">
             <div class="scoreboard-topline">
               <div class="match-label"><span class="status-ring"></span>常规赛 · 友谊赛</div>
-              <button class="text-button" id="swapSidesButton" type="button">
+              <button class="text-button control-only" id="swapSidesButton" type="button">
                 <i data-lucide="repeat-2"></i>
                 交换场地
               </button>
@@ -81,7 +96,7 @@
                   </div>
                 </div>
                 <div class="score-number" id="homeScore">3</div>
-                <div class="team-controls">
+                <div class="team-controls control-only">
                   <button class="score-button score-minus" data-score-action="home:-1" type="button" title="主队减一分">−1</button>
                   <button class="score-button" data-score-action="home:1" type="button">+1</button>
                   <button class="score-button" data-score-action="home:2" type="button">+2</button>
@@ -90,7 +105,7 @@
                 <div class="team-stats">
                   <div><span>犯规</span><strong id="homeFouls">0</strong></div>
                   <div><span>暂停</span><strong id="homeTimeouts">3</strong></div>
-                  <button class="foul-action" data-foul-action="home" type="button">记录犯规 <i data-lucide="plus"></i></button>
+                  <button class="foul-action control-only" data-foul-action="home" type="button">记录犯规 <i data-lucide="plus"></i></button>
                 </div>
               </article>
 
@@ -98,7 +113,7 @@
                 <div class="clock-kicker">PERIOD <span id="periodLabel">01</span></div>
                 <div class="game-clock" id="gameClock">10:00</div>
                 <div class="clock-status" id="clockStatus">准备开赛</div>
-                <div class="clock-controls">
+                <div class="clock-controls control-only">
                   <button class="primary-control" id="clockToggle" type="button">
                     <i data-lucide="play"></i>
                     <span>开始计时</span>
@@ -107,11 +122,11 @@
                     <i data-lucide="rotate-ccw"></i>
                   </button>
                 </div>
-                <div class="clock-adjustments">
+                <div class="clock-adjustments control-only">
                   <button type="button" data-clock-adjust="-60">− 1:00</button>
                   <button type="button" data-clock-adjust="60">+ 1:00</button>
                 </div>
-                <div class="possession-line">
+                <div class="possession-line control-only">
                   <span>球权</span>
                   <button class="possession-button home-possession is-active" data-possession="home" type="button">同曦</button>
                   <span class="possession-arrow">→</span>
@@ -128,7 +143,7 @@
                   </div>
                 </div>
                 <div class="score-number" id="awayScore">5</div>
-                <div class="team-controls">
+                <div class="team-controls control-only">
                   <button class="score-button score-minus" data-score-action="away:-1" type="button" title="客队减一分">−1</button>
                   <button class="score-button" data-score-action="away:1" type="button">+1</button>
                   <button class="score-button" data-score-action="away:2" type="button">+2</button>
@@ -137,7 +152,7 @@
                 <div class="team-stats">
                   <div><span>犯规</span><strong id="awayFouls">0</strong></div>
                   <div><span>暂停</span><strong id="awayTimeouts">3</strong></div>
-                  <button class="foul-action" data-foul-action="away" type="button">记录犯规 <i data-lucide="plus"></i></button>
+                  <button class="foul-action control-only" data-foul-action="away" type="button">记录犯规 <i data-lucide="plus"></i></button>
                 </div>
               </article>
             </div>
@@ -155,7 +170,7 @@
                 <span>最后记录</span>
                 <strong id="lastEventLabel">开场比分</strong>
               </div>
-              <div class="scoreboard-footer-actions">
+              <div class="scoreboard-footer-actions control-only">
                 <button class="ghost-button" id="timeoutButton" type="button">
                   <i data-lucide="timer"></i>
                   记录暂停
@@ -169,7 +184,7 @@
           </div>
         </section>
 
-        <section class="lower-grid">
+        <section class="lower-grid control-only">
           <div class="control-column">
             <div class="panel-heading">
               <div>

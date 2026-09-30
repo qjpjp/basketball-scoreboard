@@ -54,7 +54,8 @@ button { cursor: pointer; }
 }
 
 .brand-lockup, .topbar-actions, .match-meta, .team-identity, .clock-controls,
-.scoreboard-footer-actions, .event-footer, .modal-heading, .modal-actions {
+.scoreboard-footer-actions, .event-footer, .modal-heading, .modal-actions,
+.view-switcher, .view-tab, .display-period-chip {
   display: flex;
   align-items: center;
 }
@@ -97,6 +98,43 @@ button { cursor: pointer; }
   box-shadow: 0 0 0 4px rgba(66, 215, 197, 0.1);
 }
 .topbar-actions { gap: 9px; }
+.view-switcher {
+  display: flex;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(10, 24, 41, 0.68);
+}
+.view-tab {
+  min-height: 30px;
+  padding: 0 12px;
+  gap: 7px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 11px;
+  font-weight: 800;
+}
+.view-tab svg { width: 14px; }
+.view-tab:hover { color: var(--text); }
+.view-tab.is-active { color: var(--bg); background: var(--teal); }
+.display-only { display: none !important; }
+.view-display .control-only { display: none !important; }
+.view-display .display-only { display: inline-flex !important; }
+.display-period-chip {
+  min-height: 38px;
+  padding: 0 13px;
+  gap: 7px;
+  border: 1px solid rgba(66, 215, 197, 0.35);
+  border-radius: 8px;
+  color: var(--teal);
+  background: rgba(66, 215, 197, 0.08);
+  font-size: 11px;
+  font-weight: 800;
+}
+.display-period-chip svg { width: 14px; }
 .icon-button, .outline-button, .ghost-button, .danger-button, .text-button, .primary-button {
   display: inline-flex;
   align-items: center;
@@ -127,6 +165,12 @@ button { cursor: pointer; }
 .outline-button svg, .ghost-button svg, .danger-button svg, .text-button svg { width: 14px; }
 
 .main-content { width: min(1440px, 91.6vw); margin: 0 auto; padding: 46px 0 30px; }
+.view-display .main-content { padding-top: 56px; }
+.view-display .scoreboard-card { margin-top: 28px; }
+.view-display .score-number { font-size: clamp(92px, 12vw, 158px); }
+.view-display .clock-panel { padding-top: 44px; padding-bottom: 36px; }
+.view-display .game-clock { font-size: clamp(66px, 7vw, 98px); }
+.view-display .scoreboard-footer { min-height: 74px; }
 .section-heading, .panel-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
 .eyebrow { color: var(--teal); font-size: 10px; font-weight: 600; }
 h1, h2, p { margin-top: 0; }
@@ -313,8 +357,10 @@ h2 { margin: 4px 0 0; font-size: 19px; letter-spacing: -0.02em; }
 .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 
 @media (max-width: 940px) {
-  .topbar { padding: 0 22px; }
+  .topbar { padding: 12px 22px; flex-wrap: wrap; gap: 10px 18px; }
   .match-meta { display: none; }
+  .view-switcher { order: 3; width: 100%; }
+  .view-tab { flex: 1; }
   .main-content, .app-footer { width: min(92vw, 720px); }
   .score-grid { grid-template-columns: 1fr 1fr; }
   .clock-panel { grid-column: 1 / -1; grid-row: 1; border-bottom: 1px solid rgba(49, 71, 98, 0.58); }
@@ -324,7 +370,7 @@ h2 { margin: 4px 0 0; font-size: 19px; letter-spacing: -0.02em; }
 }
 
 @media (max-width: 620px) {
-  .topbar { min-height: 66px; }
+  .topbar { min-height: 66px; padding: 10px 14px; }
   .brand-lockup { min-width: 0; }
   .brand-subtitle, .outline-button span { display: none; }
   .main-content { width: calc(100% - 28px); padding-top: 28px; }
@@ -337,6 +383,8 @@ h2 { margin: 4px 0 0; font-size: 19px; letter-spacing: -0.02em; }
   .team-role { font-size: 8px; }
   .team-name-button { font-size: 17px; }
   .score-number { font-size: 66px; }
+  .view-display .score-number { font-size: 72px; }
+  .view-display .game-clock { font-size: 64px; }
   .team-controls { grid-template-columns: repeat(2, 1fr); }
   .team-stats { grid-template-columns: 1fr 1fr; gap: 9px 4px; }
   .foul-action { grid-column: 1 / -1; justify-self: start; }

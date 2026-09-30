@@ -26,6 +26,26 @@ let toastTimer = null;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
+const appShell = document.querySelector(".app-shell");
+
+function getViewFromHash() {
+  return window.location.hash === "#control" ? "control" : "display";
+}
+
+function setView(view, updateHash = true) {
+  const activeView = view === "control" ? "control" : "display";
+  appShell.classList.toggle("view-display", activeView === "display");
+  appShell.classList.toggle("view-control", activeView === "control");
+  $$(".view-tab").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.viewTarget === activeView);
+  });
+  $("#pageEyebrow").textContent = activeView === "control" ? "MATCH CONTROL" : "LIVE SCOREBOARD";
+  $("#pageTitle").textContent = activeView === "control" ? "比赛操作台" : "实时记分";
+  if (updateHash && window.location.hash !== `#${activeView}`) {
+    window.history.replaceState(null, "", `#${activeView}`);
+  }
+  lucide.createIcons();
+}
 
 function cloneState(value) {
   return JSON.parse(JSON.stringify(value));
@@ -67,6 +87,7 @@ function render() {
   $("#periodTotal").textContent = state.teams.home.score + state.teams.away.score;
   $("#matchTotal").textContent = state.teams.home.score + state.teams.away.score;
   $("#lastEventLabel").textContent = state.events[0]?.label || "暂无记录";
+  $("#displayPeriodName").textContent = state.period === 5 ? "加时" : `第 ${state.period} 节`;
   $("#shotClockState").textContent = state.shotClockRunning ? "计时中" : "准备";
   $("#clockStatus").textContent = state.clockRunning ? "比赛计时中" : state.clockSeconds === 0 ? "本节结束" : "准备开赛";
   $("#venueLabel").textContent = state.venue;
@@ -251,6 +272,10 @@ function saveSettings() {
 }
 
 function bindEvents() {
+  $$(".view-tab").forEach((button) => {
+    button.addEventListener("click", () => setView(button.dataset.viewTarget));
+  });
+  window.addEventListener("hashchange", () => setView(getViewFromHash(), false));
   $$(".score-button").forEach((button) => {
     button.addEventListener("click", () => {
       const [team, amount] = button.dataset.scoreAction.split(":");
@@ -370,6 +395,7 @@ function bindEvents() {
 document.addEventListener("DOMContentLoaded", () => {
   const currentDate = new Date();
   $("#matchDate").textContent = `${currentDate.getFullYear()} / ${String(currentDate.getMonth() + 1).padStart(2, "0")} / ${String(currentDate.getDate()).padStart(2, "0")}`;
+  setView(getViewFromHash(), false);
   bindEvents();
   render();
 });
