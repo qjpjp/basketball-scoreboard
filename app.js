@@ -1,7 +1,7 @@
 const defaultState = {
   teams: {
-    home: { name: "同曦", score: 3, fouls: 0, timeouts: 3 },
-    away: { name: "新训", score: 5, fouls: 0, timeouts: 3 },
+    home: { name: "同曦", score: 0, fouls: 0, timeouts: 3 },
+    away: { name: "新训", score: 0, fouls: 0, timeouts: 3 },
   },
   period: 1,
   periodSeconds: 600,
@@ -14,7 +14,7 @@ const defaultState = {
   soundOn: true,
   venue: "洛杉矶体育馆",
   events: [
-    { kind: "start", label: "开场比分", detail: "比赛已建立 · 第 1 节", score: "3 — 5", time: "10:00", icon: "flag" },
+    { kind: "start", label: "开场比分", detail: "新比赛已建立 · 第 1 节", score: "0 — 0", time: "10:00", icon: "flag" },
   ],
 };
 
@@ -282,18 +282,36 @@ function closeSettings() {
 }
 
 function saveSettings() {
-  snapshot();
-  state.teams.home.name = $("#homeTeamInput").value.trim() || "主队";
-  state.teams.away.name = $("#awayTeamInput").value.trim() || "客队";
+  const homeName = $("#homeTeamInput").value.trim() || "主队";
+  const awayName = $("#awayTeamInput").value.trim() || "客队";
   state.venue = $("#venueInput").value.trim() || "比赛场馆";
   state.periodSeconds = Number($("#periodLengthInput").value);
   state.shotClockMax = Number($("#shotClockLengthInput").value);
+  state.teams = {
+    home: { name: homeName, score: 0, fouls: 0, timeouts: 3 },
+    away: { name: awayName, score: 0, fouls: 0, timeouts: 3 },
+  };
+  state.period = 1;
   state.clockSeconds = state.periodSeconds;
+  state.clockRunning = false;
   state.shotClockSeconds = state.shotClockMax;
-  addEvent("更新比赛设置", `${state.teams.home.name} vs ${state.teams.away.name}`, "settings-2");
+  state.shotClockRunning = false;
+  state.possession = "home";
+  state.events = [
+    {
+      kind: "start",
+      label: "新比赛开始",
+      detail: `${homeName} vs ${awayName} · 第 1 节`,
+      score: "0 — 0",
+      time: formatTime(state.clockSeconds),
+      icon: "flag",
+    },
+  ];
+  history = [];
+  stopIntervals();
   closeSettings();
   render();
-  showToast("比赛设置已保存");
+  showToast("比赛设置已保存，比分已重置");
 }
 
 function bindEvents() {
